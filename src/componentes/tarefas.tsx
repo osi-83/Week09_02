@@ -5,26 +5,64 @@ import NovaTarefa from './novatarefa';
 export interface Tarefa {
   descricao: string;
   periodo: string;
+  concluida?: boolean;
 }
 
 const Tarefas: React.FC = () => {
   const [tarefas, setTarefas] = useState<Tarefa[]>([]);
 
-  const adicionarTarefa = (tarefa: Tarefa) => {
-    setTarefas((prev) => [...prev, tarefa]);
+  const adicionarTarefa = (tarefa: { descricao: string; periodo: string }) => {
+    setTarefas((prev) => [
+      ...prev,
+      { ...tarefa, concluida: false },
+    ]);
   };
+
+  const alternarConclusao = (index: number) => {
+    setTarefas((prev) =>
+      prev.map((t, i) => 
+        i === index ? { ...t, concluida: !t.concluida } : t
+      )
+    );
+  };
+
+  const tarefasPorPeriodo = (periodo: string) =>
+    tarefas.filter((t) => t.periodo === periodo);
+
+  const totalConcluidas = tarefas.filter((t) => t.concluida).length;
 
   return (
     <div className="tarefas">
       <h2><em>Lista de tarefas</em></h2>
       <NovaTarefa onAdicionarTarefa={adicionarTarefa} />
-      <ul aria-label="Lista de tarefas">
-        {tarefas.map((t, index) => (
-          <li key={index}>
-            {t.descricao} - <strong>{t.periodo}</strong>
-          </li>
+
+      <p><strong>Total de tarefas concluidas: {totalConcluidas}</strong></p>
+
+      <div className="colunas">
+        {['Manhã', 'Tarde', 'Noite'].map((periodo) => (
+          <div className="coluna" key={periodo}>
+            <h3>{periodo}</h3>
+            <ul>
+              {tarefasPorPeriodo(periodo).map((tarefa, index) => (
+                <li key={index}>
+                  <label style={{ textDecoration: tarefa.concluida ? 'line-through' : 'none' }}>
+                    <input
+                      type="checkbox"
+                      checked={tarefa.concluida}
+                      onChange={() => alternarConclusao(tarefas.indexOf(tarefa))}
+                    />
+                    {tarefa.descricao}
+                  </label>
+                </li>
+              ))}
+            </ul>
+            <p>
+              Concluidas: {tarefasPorPeriodo(periodo).filter((t) => t.concluida).length
+              }
+            </p>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 };
